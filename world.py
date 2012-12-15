@@ -1,4 +1,5 @@
 import pygame
+import random
 
 
 class Tile:
@@ -13,7 +14,7 @@ class Tile:
     def render(self, surf, x, y):
         rect = pygame.Rect(x, y, Tile.SIZE, Tile.SIZE)
         if self.destroyed:
-            surf.fill(pygame.Color(10, 10, 10), rect)
+            surf.fill(pygame.Color(40, 40, 40), rect)
         else:
             surf.fill(self.color, rect)
         self.needsRedraw = False
@@ -28,14 +29,42 @@ class World:
     WATERTILE = pygame.Color(50, 100, 255)
     GROUNDTILE = pygame.Color(71, 139, 0)
 
-    def __init__(self, width, height, inittile=GROUNDTILE, off=(0, 0)):
-        self.width = width
-        self.height = height
+    def __init__(self, width, height, off=(0, 0)):
+        self.width = width if width > 10 else 10
+        self.height = height if height > 10 else 10
         self.offX = off[0]
         self.offY = off[1]
         self.tiles = []
+        self.rand = random.Random()
         for i in range(width * height):
-            self.tiles.append(Tile(inittile))
+            self.tiles.append(Tile(World.WATERTILE))
+
+        for i in range(self.rand.randint(6, 12)):
+            size = self.rand.randint(15, 30)
+            x = self.rand.randint(10, self.width-10)
+            y = self.rand.randint(10, self.height-10)
+            self.create_landmass(x, y, size)
+
+    def create_landmass(self, x, y, size):
+        if not self.in_range(x, y) or size < 0:
+            return
+
+        self.tiles[y * self.width + x] = Tile(World.GROUNDTILE)
+
+        if not self.rand.randint(0, 2):
+            self.create_landmass(x-1, y, size-1)
+        if not self.rand.randint(0, 2):
+            self.create_landmass(x+1, y, size-1)
+        if not self.rand.randint(0, 2):
+            self.create_landmass(x, y-1, size-1)
+        if not self.rand.randint(0, 2):
+            self.create_landmass(x, y+1, size-1)
+
+    def get_render_width(self):
+        return self.width * (Tile.SIZE + 1)
+
+    def get_render_height(self):
+        return self.height * (Tile.SIZE + 1)
 
     def in_range(self, x, y):
         return x >= 0 and y >= 0 and x < self.width and y < self.height
@@ -94,7 +123,9 @@ class World:
         for xcur in range(xmin, xmax + 1):
             for ycur in range(ymin, ymax + 1):
                 if self.in_range(xcur, ycur):
-                    hits.append((xcur, ycur))
+                    if not self.get(xcur, ycur).destroyed:
+                        hits.append((xcur, ycur))
+                    self.get(xcur, ycur).needsRedraw = True
 
         if len(hits) > 0:
             return hits

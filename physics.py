@@ -4,6 +4,7 @@ class Physics:
     def __init__(self, world):
         self.world = world
         self.entities = []
+        self.cleared = []
 
     def tick(self):
         for ent in self.entities:
@@ -28,8 +29,14 @@ class Physics:
         self.entities.append(entity)
 
     def destroy(self, entity):
+        self.cleared.append(entity)
         self.entities.remove(entity)
 
     def render(self, surf):
         for ent in self.entities:
+            ent.clear(surf)
+        for ent in self.cleared:
+            ent.clear(surf)
+        for ent in self.entities:
             ent.render(surf)
+        self.cleared = []

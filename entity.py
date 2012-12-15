@@ -32,6 +32,9 @@ class Entity:
         pass
 
     def render(self, surf):
+        pass
+
+    def clear(self, surf):
         # Hack to avoid clearing screen every frame
         rect = pygame.Rect(self.oldx, self.oldy, self.w, self.h)
         surf.fill(pygame.Color(0, 0, 0), rect)
@@ -41,7 +44,6 @@ class Bullet(Entity):
         Entity.__init__(self, x, y, 40, 10)
 
     def render(self, surf):
-        Entity.render(self, surf)
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
         pygame.draw.rect(surf, pygame.Color(255, 0, 0), rect)
 

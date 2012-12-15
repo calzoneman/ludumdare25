@@ -32,6 +32,17 @@ while running:
             break
         elif ev.type == USEREVENT:
             print clock.get_fps()
+        elif ev.type == MOUSEBUTTONDOWN:
+            bull = Bullet(ev.pos[0], ev.pos[1])
+            if ev.pos[0] < world.offX:
+                bull.vx = 1
+            elif ev.pos[0] > world.offX + world.get_render_width():
+                bull.vx = -1
+            if ev.pos[1] < world.offY:
+                bull.vy = 1
+            elif ev.pos[1] > world.offY + world.get_render_height():
+                bull.vy = -1
+            physics.watch(bull)
     world.render(screen)
     physics.tick()
     physics.render(screen)
