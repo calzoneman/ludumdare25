@@ -1,0 +1,8 @@
+THEME: You are the villain
+
+IDEA:
+Tile-based square world, destroy it by flying around it and shooting
+
+- World regenerates at a slow pace
+- Other ships attack you
+- gets progressively harder
