@@ -3,21 +3,24 @@ import pygame
 
 class Tile:
 
-    SIZE = 16
+    SIZE = 8
 
     def __init__(self, color):
         self.color = color
         self.destroyed = False
+        self.needsRedraw = True
 
     def render(self, surf, x, y):
         rect = pygame.Rect(x, y, Tile.SIZE, Tile.SIZE)
         if self.destroyed:
-            pygame.draw.rect(surf, pygame.Color(10, 10, 10), rect)
+            surf.fill(pygame.Color(10, 10, 10), rect)
         else:
-            pygame.draw.rect(surf, self.color, rect)
+            surf.fill(self.color, rect)
+        self.needsRedraw = False
 
     def hit(self):
         self.destroyed = True
+        self.needsRedraw = True
 
 class World:
 
@@ -54,8 +57,9 @@ class World:
         for i in range(self.width):
             for j in range(self.height):
                 tile = self.get(i, j)
-                tile.render(surf, self.offX + i * (Tile.SIZE + 1),
-                                  self.offY + j * (Tile.SIZE + 1))
+                if tile.needsRedraw:
+                    tile.render(surf, self.offX + i * (Tile.SIZE + 1),
+                                      self.offY + j * (Tile.SIZE + 1))
 
     def entity_hit(self, ent):
         xmin = ent.x - self.offX
@@ -86,11 +90,13 @@ class World:
         ymin = ymin / (Tile.SIZE + 1)
         ymax = ymax / (Tile.SIZE + 1)
 
-        hit = False
+        hits = []
         for xcur in range(xmin, xmax + 1):
             for ycur in range(ymin, ymax + 1):
-                hit = self.in_range(xcur, ycur) or hit
-                if hit:
-                    return (xcur, ycur)
+                if self.in_range(xcur, ycur):
+                    hits.append((xcur, ycur))
 
-        return hit
+        if len(hits) > 0:
+            return hits
+        else:
+            return False

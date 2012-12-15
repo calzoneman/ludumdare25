@@ -7,14 +7,14 @@ class Physics:
 
     def tick(self):
         for ent in self.entities:
-            ent.x += ent.vx
-            ent.y += ent.vy
+            ent.move(ent.x + ent.vx, ent.y + ent.vy)
             self.entity_collision(ent)
 
             if not ent.removeme:
-                hitpos = self.world.entity_hitpos(ent)
-                if hitpos:
-                    ent.hit_world(self.world, hitpos)
+                hits = self.world.entity_hitpos(ent)
+                if hits:
+                    for hit in hits:
+                        ent.hit_world(self.world, hit)
 
             if ent.removeme:
                 self.destroy(ent)
