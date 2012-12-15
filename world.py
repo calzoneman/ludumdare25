@@ -10,8 +10,10 @@ class Tile:
         self.destroyed = False
 
     def render(self, surf, x, y):
-        if not self.destroyed:
-            rect = pygame.Rect(x, y, Tile.SIZE, Tile.SIZE)
+        rect = pygame.Rect(x, y, Tile.SIZE, Tile.SIZE)
+        if self.destroyed:
+            pygame.draw.rect(surf, pygame.Color(10, 10, 10), rect)
+        else:
             pygame.draw.rect(surf, self.color, rect)
 
     def hit(self):
@@ -19,16 +21,18 @@ class Tile:
 
 class World:
 
-    NULLTILE = Tile(pygame.Color(255, 0, 255)) # Obnoxious color
-    WATERTILE = Tile(pygame.Color(50, 100, 255))
-    GROUNDTILE = Tile(pygame.Color(71, 139, 0))
+    NULLTILE = pygame.Color(255, 0, 255) # Obnoxious color
+    WATERTILE = pygame.Color(50, 100, 255)
+    GROUNDTILE = pygame.Color(71, 139, 0)
 
-    def __init__(self, width, height, inittile=GROUNDTILE):
+    def __init__(self, width, height, inittile=GROUNDTILE, off=(0, 0)):
         self.width = width
         self.height = height
+        self.offX = off[0]
+        self.offY = off[1]
         self.tiles = []
         for i in range(width * height):
-            self.tiles.append(inittile)
+            self.tiles.append(Tile(inittile))
 
     def in_range(self, x, y):
         return x >= 0 and y >= 0 and x < self.width and y < self.height
@@ -46,9 +50,47 @@ class World:
             self.tiles[y * self.width + x].hit()
             return True
 
-    def render(self, surf, x, y):
+    def render(self, surf):
         for i in range(self.width):
             for j in range(self.height):
                 tile = self.get(i, j)
-                tile.render(surf, x + i * (Tile.SIZE + 1),
-                                  y + j * (Tile.SIZE + 1))
+                tile.render(surf, self.offX + i * (Tile.SIZE + 1),
+                                  self.offY + j * (Tile.SIZE + 1))
+
+    def entity_hit(self, ent):
+        xmin = ent.x - self.offX
+        ymin = ent.y - self.offY
+        xmax = xmin + ent.w
+        ymax = ymin + ent.h
+
+        xmin = xmin / (Tile.SIZE + 1)
+        xmax = xmax / (Tile.SIZE + 1)
+        ymin = ymin / (Tile.SIZE + 1)
+        ymax = ymax / (Tile.SIZE + 1)
+
+        hit = False
+        for xcur in range(xmin, xmax + 1):
+            for ycur in range(ymin, ymax + 1):
+                hit = self.hit(xcur, ycur) or hit
+
+        return hit
+
+    def entity_hitpos(self, ent):
+        xmin = ent.x - self.offX
+        ymin = ent.y - self.offY
+        xmax = xmin + ent.w
+        ymax = ymin + ent.h
+
+        xmin = xmin / (Tile.SIZE + 1)
+        xmax = xmax / (Tile.SIZE + 1)
+        ymin = ymin / (Tile.SIZE + 1)
+        ymax = ymax / (Tile.SIZE + 1)
+
+        hit = False
+        for xcur in range(xmin, xmax + 1):
+            for ycur in range(ymin, ymax + 1):
+                hit = self.in_range(xcur, ycur) or hit
+                if hit:
+                    return (xcur, ycur)
+
+        return hit
