@@ -22,6 +22,14 @@ class Entity:
         self.health = 0
         self.removeme = False
 
+    def takedamage(self, dmg):
+        self.health -= dmg
+        if self.health <= 0:
+            self.die()
+
+    def die(self):
+        self.removeme = True
+
     def collides(self, other):
         return not (self.x + self.w < other.x or
                     self.y + self.h < other.y or
@@ -71,12 +79,19 @@ class Entity:
 class Bullet(Entity):
     # To make things easier, bullets can just be square :)
     SIZE = 10
+    DAMAGE = 1
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, Bullet.SIZE, Bullet.SIZE, world)
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
         pygame.draw.rect(surf, pygame.Color(255, 0, 0), rect)
+
+    def hit(self, other):
+        if not isinstance(other, Enemy):
+            return
+        other.takedamage(Bullet.DAMAGE)
+        self.removeme = True
 
     def hit_world(self, hits):
         for hitpos in hits:
@@ -92,10 +107,16 @@ class Bullet(Entity):
 class Player(Entity):
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, 32, 32, world)
+        self.health = 20
+        self.lives = 3
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
         surf.fill(pygame.Color(0, 255, 255), rect)
+
+    def die(self):
+        self.lives -= 1
+        self.health = 20
 
     def decel(self):
       #  if self.vx < 0:
@@ -155,3 +176,26 @@ class Player(Entity):
             at_edge = self.x < 0 or self.y < 0
             at_edge = at_edge or self.x + self.w >= screensize[0]
             at_edge = at_edge or self.y + self.h >= screensize[1]
+
+class Enemy(Entity):
+    def __init__(self, x, y, world):
+        Entity.__init__(self, x, y, 16, 16, world)
+        self.health = 5
+
+    def hit(self, other):
+        if isinstance(other, Player):
+            other.takedamage(5)
+            self.takedamage(5)
+
+    def think(self, ply):
+        dy = ply.y - self.y
+        dx = ply.x - self.x
+        ang = math.atan2(dy, dx)
+
+        x = self.x + math.cos(ang)
+        y = self.y + math.sin(ang)
+        self.move(x, y)
+
+    def render(self, surf):
+        rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        surf.fill(pygame.Color(255, 255, 0), rect)

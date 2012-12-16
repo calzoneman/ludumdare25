@@ -3,9 +3,10 @@ import pygame
 from pygame.locals import *
 
 import math
+import random
 
 from world import Tile, World
-from entity import Entity, Bullet, Player
+from entity import Entity, Bullet, Player, Enemy
 from physics import Physics
 from keyboard import Keyboard
 
@@ -16,6 +17,15 @@ WIDTH = 640
 HEIGHT = 480
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT), HWSURFACE | DOUBLEBUF)
+
+# Event definitions
+FRAMECOUNTER = USEREVENT
+WORLDREGEN   = USEREVENT+1
+ENTITYGEN    = USEREVENT+2
+
+pygame.time.set_timer(FRAMECOUNTER, 1000)
+pygame.time.set_timer(WORLDREGEN, 3000)
+pygame.time.set_timer(ENTITYGEN, 10000)
 
 running = True
 keyboard = Keyboard()
@@ -28,7 +38,6 @@ ply = Player(20, 20, world)
 physics = Physics(world, (WIDTH, HEIGHT))
 physics.watch(ply)
 clock = pygame.time.Clock()
-pygame.time.set_timer(USEREVENT, 1000)
 last = pygame.time.get_ticks()
 
 while running:
@@ -37,9 +46,14 @@ while running:
         if ev.type == QUIT:
             running = False
             break
-        elif ev.type == USEREVENT:
+        elif ev.type == FRAMECOUNTER:
             print clock.get_fps()
+        elif ev.type == WORLDREGEN:
             world.regen_once()
+        elif ev.type == ENTITYGEN:
+            x = random.randint(0, WIDTH)
+            y = random.randint(0, HEIGHT)
+            physics.watch(Enemy(x, y, world))
         elif ev.type == MOUSEBUTTONDOWN:
             mpos = ev.pos
             center = ply.get_center()
@@ -76,6 +90,10 @@ while running:
         ply.vx = 1
     else:
         ply.vx = 0
+
+    for ent in physics.entities:
+        if isinstance(ent, Enemy):
+            ent.think(ply)
 
     if world.win():
         print "You Win!"
