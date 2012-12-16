@@ -4,6 +4,7 @@ from pygame.locals import *
 
 import math
 import random
+import sys
 
 from world import Tile, World
 from entity import Entity, Bullet, Player, Enemy
@@ -16,7 +17,8 @@ pygame.display.init()
 WIDTH = 640
 HEIGHT = 480
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT), HWSURFACE | DOUBLEBUF)
+flags = HWSURFACE | DOUBLEBUF | SRCALPHA
+screen = pygame.display.set_mode((WIDTH, HEIGHT), flags)
 
 # Event definitions
 FRAMECOUNTER = USEREVENT
@@ -34,6 +36,47 @@ white = pygame.Color(255, 255, 255)
 black = pygame.Color(0, 0, 0)
 lastrect = pygame.Rect(0, 0, 0, 0)
 
+def title():
+    start = False
+    cyan = pygame.Color(0, 255, 255)
+    while not start:
+        for ev in pygame.event.get():
+            if ev.type == KEYDOWN:
+                if ev.key == K_SPACE:
+                    start = True
+                    break
+            elif ev.type == QUIT:
+                pygame.quit()
+                sys.exit(0)
+
+        title = hugefont.render("Earthmageddon", 1, cyan, black)
+        x = (WIDTH - title.get_width()) / 2
+        y = 100
+        screen.blit(title, (x, y))
+        y += title.get_height() + 10
+
+        text = bigfont.render("WASD to move, click to fire", 1, white, black)
+        x = (WIDTH - text.get_width()) / 2
+        screen.blit(text, (x, y))
+        y += text.get_height() + 10
+
+        text = bigfont.render("Destroy the world (it regenerates)", 1, white, black)
+        x = (WIDTH - text.get_width()) / 2
+        screen.blit(text, (x, y))
+        y += text.get_height() + 10
+
+        text = bigfont.render("Avoid enemy fire, shoot them down!", 1, white, black)
+        x = (WIDTH - text.get_width()) / 2
+        screen.blit(text, (x, y))
+        y += text.get_height() + 50
+
+
+        space = bigfont.render("Press space to begin", 1, white, black)
+        x = (WIDTH - space.get_width()) / 2
+        screen.blit(space, (x, y))
+
+        pygame.display.flip()
+
 def lose():
     exit = False
     red = pygame.Color(187, 0, 0)
@@ -44,13 +87,13 @@ def lose():
                 break
 
         screen.fill(black)
-        text = hugefont.render("YOU LOSE", 1, red)
+        text = hugefont.render("YOU LOSE", 1, red, black)
         x = (WIDTH - text.get_width()) / 2
         y = (HEIGHT - text.get_height()) / 2
         screen.blit(text, (x, y))
         y += text.get_height() + 10
 
-        text = bigfont.render("The world is safe once again :(", 1, red)
+        text = bigfont.render("The world is safe once again :(", 1, red, black)
         x = (WIDTH - text.get_width()) / 2
         screen.blit(text, (x, y))
         pygame.display.flip()
@@ -65,18 +108,21 @@ def win():
                 break
 
         screen.fill(black)
-        text = hugefont.render("YOU WIN", 1, green)
+        text = hugefont.render("YOU WIN", 1, green, black)
         x = (WIDTH - text.get_width()) / 2
         y = (HEIGHT - text.get_height()) / 2
         screen.blit(text, (x, y))
         y += text.get_height() + 10
 
         msg = "With Earth destroyed, the universe is yours"
-        text = bigfont.render(msg, 1, green)
+        text = bigfont.render(msg, 1, green, black)
         x = (WIDTH - text.get_width()) / 2
         screen.blit(text, (x, y))
         pygame.display.flip()
 
+
+title()
+screen.fill(black)
 running = True
 keyboard = Keyboard()
 world = World(32, 32)
@@ -193,6 +239,7 @@ while running:
     screen.fill(black, lastrect)
 
     # Render
+    physics.renderclear(screen)
     world.render(screen)
     physics.tick()
     physics.render(screen)

@@ -82,14 +82,14 @@ class Entity:
 
 class Bullet(Entity):
     # To make things easier, bullets can just be square :)
-    SIZE = 10
+    SIZE = 5
     DAMAGE = 1
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, Bullet.SIZE, Bullet.SIZE, world)
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
-        pygame.draw.rect(surf, pygame.Color(255, 0, 0), rect)
+        pygame.draw.rect(surf, pygame.Color(0, 255, 255), rect)
 
     def hit(self, other):
         if not isinstance(other, Enemy):
@@ -110,13 +110,13 @@ class Bullet(Entity):
 
 class Player(Entity):
     def __init__(self, x, y, world):
-        Entity.__init__(self, x, y, 32, 32, world)
+        Entity.__init__(self, x, y, 32, 12, world)
         self.health = 20
         self.lives = 3
+        self.image = pygame.image.load("ufo_32x12.png")
 
     def render(self, surf):
-        rect = pygame.Rect(self.x, self.y, self.w, self.h)
-        surf.fill(pygame.Color(0, 255, 255), rect)
+        surf.blit(self.image, (self.x, self.y))
 
     def die(self):
         self.lives -= 1
@@ -124,40 +124,25 @@ class Player(Entity):
         self.removeme = True
 
     def decel(self):
-      #  if self.vx < 0:
-      #      self.vx += 0.1
-      #  if self.vx > 0:
-      #      self.vx -= 0.1
-      #  if self.vy < 0:
-      #      self.vy += 0.1
-      #  if self.vy > 0:
-      #      self.vy -= 0.1
       self.vx = self.vy = 0
 
     def accelerate(self, movedir):
-      #  self.vx += movedir[0]
-      #  if self.vx < -2:
-      #      self.vx = -2
-      #  if self.vx > 2:
-      #      self.vx = 2
-      #  self.vy += movedir[1]
-      #  if self.vy < -2:
-      #      self.vy = -2
-      #  if self.vy > 2:
-      #      self.vy = 2
       self.vx = movedir[0]
       self.vy = movedir[1]
-
 
     def hit_world(self, hits):
         collide = False
         for hitpos in hits:
+            self.world.get(hitpos[0], hitpos[1]).needsRedraw = True
             if not self.world.get(hitpos[0], hitpos[1]).destroyed:
                 collide = True
 
         if collide:
             x = 0.1 * sign(self.vx)
             y = 0.1 * sign(self.vy)
+            if x == 0 and y == 0:
+                self.die()
+                return
             while collide:
                 collide = False
                 self.x = self.x - x
@@ -209,11 +194,17 @@ class Enemy(Entity):
         self.health = 5
         self.physics = physics
         self.ticks = 0
+        self.image = pygame.image.load("triangle_16x16.png")
 
     def hit(self, other):
         if isinstance(other, Player):
             other.takedamage(5)
             self.takedamage(5)
+
+    def hit_world(self, hits):
+        if hits:
+            for pos in hits:
+                self.world.get(pos[0], pos[1]).needsRedraw = True
 
     def think(self, ply):
         center = self.get_center()
@@ -236,8 +227,7 @@ class Enemy(Entity):
         self.ticks += 1
 
     def render(self, surf):
-        rect = pygame.Rect(self.x, self.y, self.w, self.h)
-        surf.fill(pygame.Color(255, 255, 0), rect)
+        surf.blit(self.image, (self.x, self.y))
 
 class Particle(Entity):
 

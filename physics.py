@@ -49,9 +49,11 @@ class Physics:
 
     def render(self, surf):
         for ent in self.entities:
+            ent.render(surf)
+
+    def renderclear(self, surf):
+        for ent in self.entities:
             ent.clear(surf)
         for ent in self.cleared:
             ent.clear(surf)
-        for ent in self.entities:
-            ent.render(surf)
         self.cleared = []
