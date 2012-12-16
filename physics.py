@@ -1,4 +1,4 @@
-from entity import Entity, Enemy, Particle
+from entity import Entity, Enemy, Particle, Player
 import random
 
 class Physics:
@@ -29,7 +29,7 @@ class Physics:
                     ent.hit_edge(self.size)
 
             if ent.removeme:
-                if isinstance(ent, Enemy):
+                if isinstance(ent, Enemy) or isinstance(ent, Player):
                     for i in range(random.randint(4, 12)):
                         size = random.randint(3, 6)
                         self.watch(Particle(ent.x, ent.y, size, self.world))

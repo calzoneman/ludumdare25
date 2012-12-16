@@ -90,6 +90,7 @@ physics.watch(ply)
 clock = pygame.time.Clock()
 last = pygame.time.get_ticks()
 ticks = 0
+plydeathtimer = 0
 
 while running:
     ticks += 1
@@ -107,7 +108,7 @@ while running:
             y = random.randint(0, HEIGHT)
             physics.watch(Enemy(x, y, world, physics))
         elif ev.type == MOUSEBUTTONDOWN:
-            if ev.button == 0:
+            if ev.button == 0 and plydeathtimer == 0:
                 mpos = ev.pos
                 center = ply.get_center()
                 a = mpos[0] - center[0]
@@ -131,18 +132,19 @@ while running:
             keyboard.keyup(ev.key)
 
     # Handle movement
-    if keyboard.is_down(K_w):
-        ply.vy = -1
-    elif keyboard.is_down(K_s):
-        ply.vy = 1
-    else:
-        ply.vy = 0
-    if keyboard.is_down(K_a):
-        ply.vx = -1
-    elif keyboard.is_down(K_d):
-        ply.vx = 1
-    else:
-        ply.vx = 0
+    if plydeathtimer == 0:
+        if keyboard.is_down(K_w):
+            ply.vy = -1
+        elif keyboard.is_down(K_s):
+            ply.vy = 1
+        else:
+            ply.vy = 0
+        if keyboard.is_down(K_a):
+            ply.vx = -1
+        elif keyboard.is_down(K_d):
+            ply.vx = 1
+        else:
+            ply.vx = 0
 
     # Shooting repeat
     if ticks % 10 == 0 and pygame.mouse.get_pressed()[0]:
@@ -174,6 +176,18 @@ while running:
     if ply.lives == 0:
         lose()
         running = False
+    elif ply.removeme:
+        ply.removeme = False
+        plydeathtimer = 180
+    if plydeathtimer > 0:
+        if plydeathtimer == 1:
+            ply.x = random.randint(0, WIDTH - ply.w)
+            ply.y = random.randint(0, HEIGHT - ply.h)
+            while world.entity_hitpos(ply):
+                ply.x = random.randint(0, WIDTH - ply.w)
+                ply.y = random.randint(0, HEIGHT - ply.h)
+            physics.watch(ply)
+        plydeathtimer -= 1
 
     # Clear previous font
     screen.fill(black, lastrect)

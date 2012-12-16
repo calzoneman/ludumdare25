@@ -112,7 +112,7 @@ class Player(Entity):
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, 32, 32, world)
         self.health = 20
-        self.lives = 1
+        self.lives = 3
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -121,6 +121,7 @@ class Player(Entity):
     def die(self):
         self.lives -= 1
         self.health = 20
+        self.removeme = True
 
     def decel(self):
       #  if self.vx < 0:
