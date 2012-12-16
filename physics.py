@@ -14,8 +14,7 @@ class Physics:
             if not ent.removeme:
                 hits = self.world.entity_hitpos(ent)
                 if hits:
-                    for hit in hits:
-                        ent.hit_world(self.world, hit)
+                    ent.hit_world(self.world, hits)
 
             if ent.removeme:
                 self.destroy(ent)

@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 
 class Tile:
@@ -114,10 +115,10 @@ class World:
         xmax = xmin + ent.w
         ymax = ymin + ent.h
 
-        xmin = xmin / (Tile.SIZE + 1)
-        xmax = xmax / (Tile.SIZE + 1)
-        ymin = ymin / (Tile.SIZE + 1)
-        ymax = ymax / (Tile.SIZE + 1)
+        xmin = int(math.floor(xmin / (Tile.SIZE + 1)))
+        xmax = int(math.floor(xmax / (Tile.SIZE + 1)))
+        ymin = int(math.floor(ymin / (Tile.SIZE + 1)))
+        ymax = int(math.floor(ymax / (Tile.SIZE + 1)))
 
         hits = []
         for xcur in range(xmin, xmax + 1):
