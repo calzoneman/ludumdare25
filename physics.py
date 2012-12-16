@@ -1,4 +1,5 @@
-from entity import Entity
+from entity import Entity, Enemy, Particle
+import random
 
 class Physics:
     def __init__(self, world, size=(640, 480)):
@@ -9,6 +10,9 @@ class Physics:
 
     def tick(self):
         for ent in self.entities:
+            # Enemy.think() needs to accept a Player as an argument
+            if not isinstance(ent, Enemy):
+                ent.think()
             ent.move(ent.x + ent.vx, ent.y + ent.vy)
             self.entity_collision(ent)
 
@@ -25,6 +29,10 @@ class Physics:
                     ent.hit_edge(self.size)
 
             if ent.removeme:
+                if isinstance(ent, Enemy):
+                    for i in range(random.randint(4, 12)):
+                        size = random.randint(3, 6)
+                        self.watch(Particle(ent.x, ent.y, size, self.world))
                 self.destroy(ent)
 
     def entity_collision(self, ent):

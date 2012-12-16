@@ -25,7 +25,57 @@ ENTITYGEN    = USEREVENT+2
 
 pygame.time.set_timer(FRAMECOUNTER, 1000)
 pygame.time.set_timer(WORLDREGEN, 3000)
-pygame.time.set_timer(ENTITYGEN, 10000)
+pygame.time.set_timer(ENTITYGEN, 5000)
+
+# Font init
+bigfont = pygame.font.Font(None, 40)
+hugefont = pygame.font.Font(None, 100)
+white = pygame.Color(255, 255, 255)
+black = pygame.Color(0, 0, 0)
+lastrect = pygame.Rect(0, 0, 0, 0)
+
+def lose():
+    exit = False
+    red = pygame.Color(187, 0, 0)
+    while not exit:
+        for ev in pygame.event.get():
+            if ev.type == QUIT:
+                exit = True
+                break
+
+        screen.fill(black)
+        text = hugefont.render("YOU LOSE", 1, red)
+        x = (WIDTH - text.get_width()) / 2
+        y = (HEIGHT - text.get_height()) / 2
+        screen.blit(text, (x, y))
+        y += text.get_height() + 10
+
+        text = bigfont.render("The world is safe once again :(", 1, red)
+        x = (WIDTH - text.get_width()) / 2
+        screen.blit(text, (x, y))
+        pygame.display.flip()
+
+def win():
+    exit = False
+    green = pygame.Color(0, 187, 0)
+    while not exit:
+        for ev in pygame.event.get():
+            if ev.type == QUIT:
+                exit = True
+                break
+
+        screen.fill(black)
+        text = hugefont.render("YOU WIN", 1, green)
+        x = (WIDTH - text.get_width()) / 2
+        y = (HEIGHT - text.get_height()) / 2
+        screen.blit(text, (x, y))
+        y += text.get_height() + 10
+
+        msg = "With Earth destroyed, the universe is yours"
+        text = bigfont.render(msg, 1, green)
+        x = (WIDTH - text.get_width()) / 2
+        screen.blit(text, (x, y))
+        pygame.display.flip()
 
 running = True
 keyboard = Keyboard()
@@ -39,8 +89,10 @@ physics = Physics(world, (WIDTH, HEIGHT))
 physics.watch(ply)
 clock = pygame.time.Clock()
 last = pygame.time.get_ticks()
+ticks = 0
 
 while running:
+    ticks += 1
     clock.tick(0)
     for ev in pygame.event.get():
         if ev.type == QUIT:
@@ -53,24 +105,25 @@ while running:
         elif ev.type == ENTITYGEN:
             x = random.randint(0, WIDTH)
             y = random.randint(0, HEIGHT)
-            physics.watch(Enemy(x, y, world))
+            physics.watch(Enemy(x, y, world, physics))
         elif ev.type == MOUSEBUTTONDOWN:
-            mpos = ev.pos
-            center = ply.get_center()
-            a = mpos[0] - center[0]
-            b = mpos[1] - center[1]
-            # tan(ang) = b / a
-            ang = math.atan2(b, a)
+            if ev.button == 0:
+                mpos = ev.pos
+                center = ply.get_center()
+                a = mpos[0] - center[0]
+                b = mpos[1] - center[1]
+                # tan(ang) = b / a
+                ang = math.atan2(b, a)
 
-            # Calculate bullet pos
-            pos = [math.cos(ang) * ply.w + center[0],
-                   math.sin(ang) * ply.h + center[1]]
+                # Calculate bullet pos
+                pos = [math.cos(ang) * ply.w + center[0],
+                       math.sin(ang) * ply.h + center[1]]
 
-            bull = Bullet(pos[0], pos[1], world)
-            speed = 2
-            bull.vx = speed * math.cos(ang)
-            bull.vy = speed * math.sin(ang)
-            physics.watch(bull)
+                bull = Bullet(pos[0], pos[1], world)
+                speed = 2
+                bull.vx = speed * math.cos(ang)
+                bull.vy = speed * math.sin(ang)
+                physics.watch(bull)
 
         elif ev.type == KEYDOWN:
             keyboard.keydown(ev.key)
@@ -91,15 +144,50 @@ while running:
     else:
         ply.vx = 0
 
+    # Shooting repeat
+    if ticks % 10 == 0 and pygame.mouse.get_pressed()[0]:
+        mpos = pygame.mouse.get_pos()
+        center = ply.get_center()
+        a = mpos[0] - center[0]
+        b = mpos[1] - center[1]
+        # tan(ang) = b / a
+        ang = math.atan2(b, a)
+
+        # Calculate bullet pos
+        pos = [math.cos(ang) * ply.w + center[0],
+               math.sin(ang) * ply.h + center[1]]
+
+        bull = Bullet(pos[0], pos[1], world)
+        speed = 2
+        bull.vx = speed * math.cos(ang)
+        bull.vy = speed * math.sin(ang)
+        physics.watch(bull)
+
+
     for ent in physics.entities:
         if isinstance(ent, Enemy):
             ent.think(ply)
 
     if world.win():
-        print "You Win!"
+        win()
+        running = False
+    if ply.lives == 0:
+        lose()
+        running = False
+
+    # Clear previous font
+    screen.fill(black, lastrect)
+
+    # Render
     world.render(screen)
     physics.tick()
     physics.render(screen)
+
+    # Display health
+    msg = "Lives: %d | Health: %d" % (ply.lives, ply.health)
+    text = bigfont.render(msg, 1, white)
+    lastrect = pygame.Rect(0, 0, text.get_width(), text.get_height())
+    screen.blit(text, (0, 0))
     pygame.display.flip()
 
 

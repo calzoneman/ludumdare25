@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 
 
 def sign(x):
@@ -26,6 +27,9 @@ class Entity:
         self.health -= dmg
         if self.health <= 0:
             self.die()
+
+    def think(self):
+        pass
 
     def die(self):
         self.removeme = True
@@ -108,7 +112,7 @@ class Player(Entity):
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, 32, 32, world)
         self.health = 20
-        self.lives = 3
+        self.lives = 1
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -177,10 +181,33 @@ class Player(Entity):
             at_edge = at_edge or self.x + self.w >= screensize[0]
             at_edge = at_edge or self.y + self.h >= screensize[1]
 
-class Enemy(Entity):
+class EnemyBullet(Entity):
+    # To make things easier, bullets can just be square :)
+    SIZE = 5
+    DAMAGE = 1
     def __init__(self, x, y, world):
+        Entity.__init__(self, x, y, EnemyBullet.SIZE, EnemyBullet.SIZE, world)
+
+    def render(self, surf):
+        rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        pygame.draw.rect(surf, pygame.Color(255, 0, 0), rect)
+
+    def hit(self, other):
+        if not isinstance(other, Player):
+            return
+        other.takedamage(EnemyBullet.DAMAGE)
+        self.removeme = True
+
+    def hit_edge(self, screensize):
+        self.removeme = True
+
+class Enemy(Entity):
+    SPEED = 0.6
+    def __init__(self, x, y, world, physics):
         Entity.__init__(self, x, y, 16, 16, world)
         self.health = 5
+        self.physics = physics
+        self.ticks = 0
 
     def hit(self, other):
         if isinstance(other, Player):
@@ -188,14 +215,69 @@ class Enemy(Entity):
             self.takedamage(5)
 
     def think(self, ply):
-        dy = ply.y - self.y
-        dx = ply.x - self.x
+        center = self.get_center()
+        dy = ply.y - center[1]
+        dx = ply.x - center[0]
         ang = math.atan2(dy, dx)
 
-        x = self.x + math.cos(ang)
-        y = self.y + math.sin(ang)
-        self.move(x, y)
+        self.vx = Enemy.SPEED * math.cos(ang)
+        self.vy = Enemy.SPEED * math.sin(ang)
+
+        if self.ticks % 60 == 0:
+            pos = [math.cos(ang) * self.w + center[0],
+                   math.sin(ang) * self.h + center[1]]
+            bullet = EnemyBullet(pos[0], pos[1], self.world)
+            speed = 2
+            bullet.vx = speed * math.cos(ang)
+            bullet.vy = speed * math.sin(ang)
+            self.physics.watch(bullet)
+
+        self.ticks += 1
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
         surf.fill(pygame.Color(255, 255, 0), rect)
+
+class Particle(Entity):
+
+    COLORS = [pygame.Color(255, 187, 0),
+              pygame.Color(255, 0, 0),
+              pygame.Color(255, 255, 0),
+              pygame.Color(187, 187, 187)]
+
+    def __init__(self, x, y, size, world, color=None):
+        Entity.__init__(self, x, y, size, size, world)
+        if color is None:
+            color = random.choice(Particle.COLORS)
+        self.color = color
+        self.ticks = 0
+        self.lifetime = random.randint(40, 100)
+        ang = random.random() * 2 * 3.14
+        self.vx = (random.random() * 0.8) * math.cos(ang)
+        self.vy = (random.random() * 0.8) * math.sin(ang)
+
+    def render(self, surf):
+        rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        pygame.draw.rect(surf, self.color, rect)
+
+    def think(self):
+        if self.ticks == self.lifetime:
+            self.removeme = True
+
+        if self.vx < 0:
+            self.vx += 0.01
+        if self.vx > 0:
+            self.vx -= 0.01
+        if math.fabs(self.vx) < 0.01:
+            self.vx = 0
+        if self.vy < 0:
+            self.vy += 0.01
+        if self.vy > 0:
+            self.vy -= 0.01
+        if math.fabs(self.vy) < 0.01:
+            self.vy = 0
+
+        self.ticks += 1
+
+    def hit_edge(self, screensize):
+        self.removeme = True
