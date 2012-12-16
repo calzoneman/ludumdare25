@@ -9,13 +9,14 @@ def sign(x):
         return x / math.fabs(x)
 
 class Entity:
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, world):
         self.x = x
         self.y = y
         self.oldx = x
         self.oldy = y
         self.w = w
         self.h = h
+        self.world = world
         self.vx = 0
         self.vy = 0
         self.health = 0
@@ -39,7 +40,10 @@ class Entity:
     def hit(self, other):
         pass
 
-    def hit_world(self, world, hits):
+    def hit_world(self, hits):
+        pass
+
+    def hit_edge(self, screensize):
         pass
 
     def render(self, surf):
@@ -49,27 +53,45 @@ class Entity:
         # Hack to avoid clearing screen every frame
         rect = pygame.Rect(self.oldx, self.oldy, self.w, self.h)
         surf.fill(pygame.Color(0, 0, 0), rect)
+        # Find hit positions at old position, redraw them
+        x = self.x
+        y = self.y
+        self.x = self.oldx
+        self.y = self.oldy
+        hits = self.world.entity_hitpos(self)
+        if hits:
+            for hitpos in hits:
+                for i in range(hitpos[0] - 1, hitpos[0] + 1):
+                    for j in range(hitpos[1] - 1, hitpos[1] + 1):
+                        self.world.get(i, j).needsRedraw = True
+        # Restore position
+        self.x = x
+        self.y = y
 
 class Bullet(Entity):
     # To make things easier, bullets can just be square :)
     SIZE = 10
-    def __init__(self, x, y):
-        Entity.__init__(self, x, y, Bullet.SIZE, Bullet.SIZE)
+    def __init__(self, x, y, world):
+        Entity.__init__(self, x, y, Bullet.SIZE, Bullet.SIZE, world)
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
         pygame.draw.rect(surf, pygame.Color(255, 0, 0), rect)
 
-    def hit_world(self, world, hits):
+    def hit_world(self, hits):
         for hitpos in hits:
             for i in range(hitpos[0] - 1, hitpos[0] + 1):
                 for j in range(hitpos[1] - 1, hitpos[1] + 1):
-                    if world.hit(i, j):
+                    if self.world.hit(i, j):
                         self.removeme = True
+                    self.world.get(i, j).needsRedraw = True
+
+    def hit_edge(self, screensize):
+        self.removeme = True
 
 class Player(Entity):
-    def __init__(self, x, y):
-        Entity.__init__(self, x, y, 32, 32)
+    def __init__(self, x, y, world):
+        Entity.__init__(self, x, y, 32, 32, world)
 
     def render(self, surf):
         rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -101,10 +123,10 @@ class Player(Entity):
       self.vy = movedir[1]
 
 
-    def hit_world(self, world, hits):
+    def hit_world(self, hits):
         collide = False
         for hitpos in hits:
-            if not world.get(hitpos[0], hitpos[1]).destroyed:
+            if not self.world.get(hitpos[0], hitpos[1]).destroyed:
                 collide = True
 
         if collide:
@@ -115,9 +137,21 @@ class Player(Entity):
                 self.x = self.x - x
                 self.y = self.y - y
 
-                hits = world.entity_hitpos(self)
+                hits = self.world.entity_hitpos(self)
                 if not hits:
                     break
                 for pos in hits:
-                    if not world.get(pos[0], pos[1]).destroyed:
+                    if not self.world.get(pos[0], pos[1]).destroyed:
                         collide = True
+
+    def hit_edge(self, screensize):
+        x = 0.1 * sign(self.vx)
+        y = 0.1 * sign(self.vy)
+        at_edge = True
+        while at_edge:
+            at_edge = False
+            self.x = self.x - x
+            self.y = self.y - y
+            at_edge = self.x < 0 or self.y < 0
+            at_edge = at_edge or self.x + self.w >= screensize[0]
+            at_edge = at_edge or self.y + self.h >= screensize[1]

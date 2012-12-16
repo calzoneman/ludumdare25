@@ -1,10 +1,11 @@
 from entity import Entity
 
 class Physics:
-    def __init__(self, world):
+    def __init__(self, world, size=(640, 480)):
         self.world = world
         self.entities = []
         self.cleared = []
+        self.size = size
 
     def tick(self):
         for ent in self.entities:
@@ -14,7 +15,14 @@ class Physics:
             if not ent.removeme:
                 hits = self.world.entity_hitpos(ent)
                 if hits:
-                    ent.hit_world(self.world, hits)
+                    ent.hit_world(hits)
+
+            if not ent.removeme:
+                offscreen = ent.x < 0 or ent.y < 0
+                offscreen = offscreen or ent.x + ent.w >= self.size[0]
+                offscreen = offscreen or ent.y + ent.h >= self.size[1]
+                if offscreen:
+                    ent.hit_edge(self.size)
 
             if ent.removeme:
                 self.destroy(ent)

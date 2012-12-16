@@ -36,8 +36,9 @@ class World:
         self.offX = off[0]
         self.offY = off[1]
         self.tiles = []
+        self.livecount = self.width * self.height
         self.rand = random.Random()
-        for i in range(width * height):
+        for i in range(self.width * self.height):
             self.tiles.append(Tile(World.WATERTILE))
 
         for i in range(self.rand.randint(6, 12)):
@@ -61,6 +62,9 @@ class World:
         if not self.rand.randint(0, 2):
             self.create_landmass(x, y+1, size-1)
 
+    def win(self):
+        return self.livecount <= 0
+
     def get_render_width(self):
         return self.width * (Tile.SIZE + 1)
 
@@ -70,9 +74,39 @@ class World:
     def in_range(self, x, y):
         return x >= 0 and y >= 0 and x < self.width and y < self.height
 
+    def regen_once(self):
+        x = [0, 0]
+        y = [0, 0]
+        if self.width % 2 == 0:
+            x[0] = int(math.floor(self.width / 2))
+            x[1] = x[0] + 1
+        else:
+            x[0] = x[1] = int(math.floor(self.width / 2))
+
+        if self.height % 2 == 0:
+            y[0] = int(math.floor(self.height / 2))
+            y[1] = y[0] + 1
+        else:
+            y[0] = y[1] = int(math.floor(self.height / 2))
+
+        count = 0
+        while count == 0 and x[0] >= 0 and y[0] >= 0:
+            for i in range(x[0], x[1] + 1):
+                for j in range(y[0], y[1] + 1):
+                    tile = self.get(i, j)
+                    if tile.destroyed:
+                        tile.destroyed = False
+                        tile.needsRedraw = True
+                        count += 1
+            x[0] -= 1
+            x[1] += 1
+            y[0] -= 1
+            y[1] += 1
+        self.livecount += count
+
     def get(self, x, y):
         if not self.in_range(x, y):
-            return World.NULLTILE
+            return Tile(World.NULLTILE)
         else:
             return self.tiles[y * self.width + x]
 
@@ -80,6 +114,8 @@ class World:
         if not self.in_range(x, y):
             return False
         else:
+            if not self.tiles[y * self.width + x].destroyed:
+                self.livecount -= 1
             self.tiles[y * self.width + x].hit()
             return True
 

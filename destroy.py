@@ -19,13 +19,14 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), HWSURFACE | DOUBLEBUF)
 
 running = True
 keyboard = Keyboard()
-world = World(32, 32, off=(150, 50))
-ply = Player(20, 20)
-physics = Physics(world)
+world = World(32, 32)
+off = ((WIDTH - world.get_render_width()) / 2,
+       (HEIGHT - world.get_render_height()) / 2)
+world.offX = off[0]
+world.offY = off[1]
+ply = Player(20, 20, world)
+physics = Physics(world, (WIDTH, HEIGHT))
 physics.watch(ply)
-bullet = Bullet(0, 80)
-bullet.vx = 1
-physics.watch(bullet)
 clock = pygame.time.Clock()
 pygame.time.set_timer(USEREVENT, 1000)
 last = pygame.time.get_ticks()
@@ -38,6 +39,7 @@ while running:
             break
         elif ev.type == USEREVENT:
             print clock.get_fps()
+            world.regen_once()
         elif ev.type == MOUSEBUTTONDOWN:
             mpos = ev.pos
             center = ply.get_center()
@@ -45,27 +47,23 @@ while running:
             b = mpos[1] - center[1]
             # tan(ang) = b / a
             ang = math.atan2(b, a)
-            print mpos
 
             # Calculate bullet pos
             pos = [math.cos(ang) * ply.w + center[0],
                    math.sin(ang) * ply.h + center[1]]
 
-            bull = Bullet(pos[0], pos[1])
-            bull.vx = math.cos(ang)
-            bull.vy = math.sin(ang)
+            bull = Bullet(pos[0], pos[1], world)
+            speed = 2
+            bull.vx = speed * math.cos(ang)
+            bull.vy = speed * math.sin(ang)
             physics.watch(bull)
 
         elif ev.type == KEYDOWN:
             keyboard.keydown(ev.key)
         elif ev.type == KEYUP:
             keyboard.keyup(ev.key)
-    world.render(screen)
-    physics.tick()
-    physics.render(screen)
-    pygame.display.flip()
 
-    # Handle input
+    # Handle movement
     if keyboard.is_down(K_w):
         ply.vy = -1
     elif keyboard.is_down(K_s):
@@ -78,6 +76,14 @@ while running:
         ply.vx = 1
     else:
         ply.vx = 0
+
+    if world.win():
+        print "You Win!"
+    world.render(screen)
+    physics.tick()
+    physics.render(screen)
+    pygame.display.flip()
+
 
     dt = pygame.time.get_ticks() - last
     if dt < (1000 / 60):
