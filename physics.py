@@ -1,7 +1,13 @@
 from entity import Entity, Enemy, Particle, Player
 import random
+import pygame
+
+pygame.mixer.init()
 
 class Physics:
+
+    explosion = pygame.mixer.Sound("explosion.wav")
+
     def __init__(self, world, size=(640, 480)):
         self.world = world
         self.entities = []
@@ -30,6 +36,7 @@ class Physics:
 
             if ent.removeme:
                 if isinstance(ent, Enemy) or isinstance(ent, Player):
+                    Physics.explosion.play()
                     for i in range(random.randint(4, 12)):
                         size = random.randint(3, 6)
                         self.watch(Particle(ent.x, ent.y, size, self.world))

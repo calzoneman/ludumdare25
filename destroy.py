@@ -36,6 +36,9 @@ white = pygame.Color(255, 255, 255)
 black = pygame.Color(0, 0, 0)
 lastrect = pygame.Rect(0, 0, 0, 0)
 
+# Sound init
+shootsound = pygame.mixer.Sound("shoot.wav")
+
 def title():
     start = False
     cyan = pygame.Color(0, 255, 255)
@@ -171,6 +174,7 @@ while running:
                 bull.vx = speed * math.cos(ang)
                 bull.vy = speed * math.sin(ang)
                 physics.watch(bull)
+                shootsound.play()
 
         elif ev.type == KEYDOWN:
             keyboard.keydown(ev.key)
@@ -210,6 +214,7 @@ while running:
         bull.vx = speed * math.cos(ang)
         bull.vy = speed * math.sin(ang)
         physics.watch(bull)
+        shootsound.play()
 
 
     for ent in physics.entities:

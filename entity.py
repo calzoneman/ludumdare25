@@ -2,6 +2,7 @@ import pygame
 import math
 import random
 
+pygame.mixer.init()
 
 def sign(x):
     if x == 0:
@@ -109,6 +110,7 @@ class Bullet(Entity):
         self.removeme = True
 
 class Player(Entity):
+
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, 32, 12, world)
         self.health = 20
@@ -171,6 +173,7 @@ class EnemyBullet(Entity):
     # To make things easier, bullets can just be square :)
     SIZE = 5
     DAMAGE = 1
+    HURTSOUND = pygame.mixer.Sound("hurt.wav")
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, EnemyBullet.SIZE, EnemyBullet.SIZE, world)
 
@@ -183,6 +186,7 @@ class EnemyBullet(Entity):
             return
         other.takedamage(EnemyBullet.DAMAGE)
         self.removeme = True
+        EnemyBullet.HURTSOUND.play()
 
     def hit_edge(self, screensize):
         self.removeme = True
