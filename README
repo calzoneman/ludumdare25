@@ -1,0 +1,28 @@
+Earthmageddon was created and tested with Python 2.7.  See
+http://www.python.org for information on downloading and installing Python.
+Most *nix distributions have python in their package repositories.
+
+Earthmageddon was built with the Pygame library.  For information on
+installing this library, see http://www.pygame.org/news.html
+
+To run Earthmageddon, either run the executable ./destroy.py (assuming
+/usr/bin/env python evaluates to your Python 2 executable), or run
+python destroy.py.
+
+The object of the game is to destroy the world.  Shooting at the world will
+destroy chunks of it.  When all chunks are destroyed, the game is over and
+you win.  Every several seconds, the world will regenerate a layer past your
+deepest hit.  Enemies will spawn (red triangles) and shoot at you.  Avoid
+their bullets, or else you'll lose health and die.  Colliding with an enemy
+will kill the enemy and inflict 5 damage on yourself.  You have 2 lives,
+each with 20 health (bullets do 1 damage each).  Enemies have 5 health.  If
+you die, you will respawn after 3 seconds.
+
+To move, use WASD.  Click the left mouse button to fire.  Click and hold
+to fire repeatedly.  The direction of the emitted bullets is decided by
+the position of the mouse cursor relative to your character (the UFO).
+
+Please report bugs to admin@calzoneman.net
+
+This code is licensed under the Creative Commons Attribution-NonCommercial
+3.0 License.  See LICENSE for full license details.

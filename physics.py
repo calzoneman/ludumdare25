@@ -2,7 +2,7 @@ from entity import Entity, Enemy, Particle, Player
 import random
 import pygame
 
-pygame.mixer.init()
+pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
 
 class Physics:
 

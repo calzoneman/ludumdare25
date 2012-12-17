@@ -2,7 +2,7 @@ import pygame
 import math
 import random
 
-pygame.mixer.init()
+pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=512)
 
 def sign(x):
     if x == 0:
@@ -114,7 +114,7 @@ class Player(Entity):
     def __init__(self, x, y, world):
         Entity.__init__(self, x, y, 32, 12, world)
         self.health = 20
-        self.lives = 3
+        self.lives = 2
         self.image = pygame.image.load("ufo_32x12.png")
 
     def render(self, surf):
